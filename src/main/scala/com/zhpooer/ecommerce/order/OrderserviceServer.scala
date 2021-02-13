@@ -8,6 +8,9 @@ import org.http4s.implicits._
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.Logger
 import scala.concurrent.ExecutionContext.global
+import com.zhpooer.ecommerce.order.infrastructure.env._
+import com.zhpooer.ecommerce.order.about.AboutAlg
+import com.zhpooer.ecommerce.order.about.AboutRoutes
 
 object OrderserviceServer {
 
@@ -17,13 +20,17 @@ object OrderserviceServer {
       helloWorldAlg = HelloWorld.impl[F]
       jokeAlg = Jokes.impl[F](client)
 
+      implicit0(envAlg: EnvironmentAlg[F]) = Environment.impl[F]
+      aboutAlg = AboutAlg.impl[F]
+
       // Combine Service Routes into an HttpApp.
       // Can also be done via a Router if you
       // want to extract a segments not checked
       // in the underlying routes.
       httpApp = (
         OrderserviceRoutes.helloWorldRoutes[F](helloWorldAlg) <+>
-        OrderserviceRoutes.jokeRoutes[F](jokeAlg)
+        OrderserviceRoutes.jokeRoutes[F](jokeAlg) <+>
+        AboutRoutes.all[F](aboutAlg)
       ).orNotFound
 
       // With Middlewares in place
