@@ -1,8 +1,8 @@
 package com.zhpooer.ecommerce.order.order
 
-import cats.Functor
+import cats.{Functor, Monad}
 import cats.data.Chain
-import cats.effect.{Sync, Timer}
+import cats.effect.Timer
 import cats.implicits._
 import cats.mtl.{Ask, Raise, Tell}
 import com.zhpooer.ecommerce.order.infrastructure.db.TransactionMrg
@@ -10,7 +10,6 @@ import com.zhpooer.ecommerce.order.order.OrderCommand.{ChangeProductCountCommand
 import com.zhpooer.ecommerce.order.order.OrderError.OrderNotFound
 import com.zhpooer.ecommerce.order.order.model.{Order, OrderItem}
 
-//@finalAlg
 trait OrderAppService[F[_]] {
   def createOrder(createOrderCommand: CreateOrderCommand): F[Order]
 
@@ -31,7 +30,7 @@ object OrderAppService {
   def apply[F[_]: OrderAppService]: OrderAppService[F] = implicitly
 
   def impl[
-    F[_]: Timer: Sync: OrderIdGenAlg : OrderEventDispatcher: TransactionMrg: OrderRepositoryAlg
+    F[_]: Timer: Monad: OrderIdGenAlg : OrderEventDispatcher: TransactionMrg: OrderRepositoryAlg
   ]: OrderAppService[F] = new OrderAppService[F] {
 
     implicit val tellInstance = new Tell[F, Chain[OrderEvent]] {

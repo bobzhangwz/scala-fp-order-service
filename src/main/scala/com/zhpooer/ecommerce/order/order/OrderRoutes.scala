@@ -14,7 +14,9 @@ import org.http4s.dsl.Http4sDsl
 
 object OrderRoutes {
 
-  def all[F[_]: Sync: OrderAppService]: HttpRoutes[F] = {
+  def all[F[_]: Sync](orderAppService: OrderAppService[F]): HttpRoutes[F] = {
+    implicit val os = orderAppService
+
     val dsl = new Http4sDsl[F]{}
     import dsl._
 

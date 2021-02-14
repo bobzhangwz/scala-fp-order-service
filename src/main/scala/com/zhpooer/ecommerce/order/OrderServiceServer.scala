@@ -2,6 +2,10 @@ package com.zhpooer.ecommerce.order
 
 import cats.effect.{Blocker, ConcurrentEffect, ContextShift, Timer}
 import cats.implicits._
+import com.zhpooer.ecommerce.order.about.{AboutAlg, AboutRoutes}
+import com.zhpooer.ecommerce.order.infrastructure.db.{DBManager, TransactionMrg}
+import com.zhpooer.ecommerce.order.infrastructure.env._
+import com.zhpooer.ecommerce.order.order.OrderRoutes
 import fs2.Stream
 import org.http4s.client.blaze.BlazeClientBuilder
 import org.http4s.implicits._
@@ -9,32 +13,30 @@ import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.Logger
 
 import scala.concurrent.ExecutionContext.global
-import com.zhpooer.ecommerce.order.infrastructure.env._
-import com.zhpooer.ecommerce.order.about.AboutAlg
-import com.zhpooer.ecommerce.order.about.AboutRoutes
-import com.zhpooer.ecommerce.order.infrastructure.db.{DBManager, TransactionMrg}
-import com.zhpooer.ecommerce.order.order.OrderRoutes
 
 object OrderServiceServer {
 
   def stream[F[_]: ConcurrentEffect: ContextShift](implicit T: Timer[F]): Stream[F, Nothing] = {
-    Stream.resource(Blocker[F]) >>= { blocker =>
 
-      val txResource = DBManager.transactor[F](blocker)
-      implicit val transactionMrg = TransactionMrg.impl[F](txResource)
+    val blockAndTransactor = for {
+      blocker <- Blocker[F]
+      transactor <- DBManager.transactor[F](blocker)
+    } yield (blocker, transactor)
 
-      import order.implicits._
+    Stream.resource(blockAndTransactor) >>= { case (_, transactor) =>
+      implicit val transactionMrg = TransactionMrg.impl[F](transactor)
 
       for {
         client <- BlazeClientBuilder[F](global).stream
-
         implicit0(envAlg: EnvironmentAlg[F]) = Environment.impl[F]
+
         aboutAlg = AboutAlg.impl[F]
+        orderAlg = order.alg.orderAlg[F]
 
         httpApp = (
-            AboutRoutes.all[F](aboutAlg) <+>
-            OrderRoutes.all[F]
-          ).orNotFound
+          AboutRoutes.all[F](aboutAlg) <+>
+            OrderRoutes.all[F](orderAlg)
+        ).orNotFound
 
         finalHttpApp = Logger.httpApp(true, true)(httpApp)
 
