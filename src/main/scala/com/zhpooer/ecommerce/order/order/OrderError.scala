@@ -1,6 +1,6 @@
 package com.zhpooer.ecommerce.order.order
 
-sealed trait OrderError {
+sealed trait OrderError extends Throwable {
   def status: Int
   def message: String
 }

@@ -10,6 +10,7 @@ import com.zhpooer.ecommerce.order.order.OrderCommand.{ChangeProductCountCommand
 import com.zhpooer.ecommerce.order.order.OrderError.OrderNotFound
 import com.zhpooer.ecommerce.order.order.model.{Order, OrderItem}
 
+//@finalAlg
 trait OrderAppService[F[_]] {
   def createOrder(createOrderCommand: CreateOrderCommand): F[Order]
 
