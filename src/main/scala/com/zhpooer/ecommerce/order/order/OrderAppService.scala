@@ -1,20 +1,43 @@
 package com.zhpooer.ecommerce.order.order
 
+import cats.Functor
 import cats.data.Chain
 import cats.effect.{Sync, Timer}
-import com.zhpooer.ecommerce.order.order.OrderCommand.CreateOrderCommand
-import com.zhpooer.ecommerce.order.order.model.{Order, OrderItem}
 import cats.implicits._
+import cats.mtl.{Ask, Raise, Tell}
 import com.zhpooer.ecommerce.order.infrastructure.db.TransactionMrg
+import com.zhpooer.ecommerce.order.order.OrderCommand.{ChangeProductCountCommand, CreateOrderCommand, PayOrderCommand}
+import com.zhpooer.ecommerce.order.order.OrderError.OrderNotFound
+import com.zhpooer.ecommerce.order.order.model.{Order, OrderItem}
 
 trait OrderAppService[F[_]] {
   def createOrder(createOrderCommand: CreateOrderCommand): F[Order]
+
+  def changeProductCount(orderId: String, command: ChangeProductCountCommand)(
+    implicit R: Raise[F, OrderError]
+  ): F[Unit]
+
+  def pay(orderId: String, command: PayOrderCommand)(
+    implicit R: Raise[F, OrderError]
+  ): F[Unit]
+
+  def changeAddressDetail(orderId: String, detail: String)(
+    implicit R: Raise[F, OrderError]
+  ): F[Unit]
 }
 
 object OrderAppService {
   def apply[F[_]: OrderAppService]: OrderAppService[F] = implicitly
 
-  def impl[F[_]: Timer: Sync: OrderIdGenAlg: OrderEventDispatcher: TransactionMrg: OrderRepositoryAlg]: OrderAppService[F] = new OrderAppService[F] {
+  def impl[
+    F[_]: Timer: Sync: OrderIdGenAlg : OrderEventDispatcher: TransactionMrg: OrderRepositoryAlg
+  ]: OrderAppService[F] = new OrderAppService[F] {
+
+    implicit val tellInstance = new Tell[F, Chain[OrderEvent]] {
+      override def functor: Functor[F] = implicitly
+      override def tell(l: Chain[OrderEvent]): F[Unit] = implicitly[OrderEventDispatcher[F]].dispatch(l)
+    }
+
     override def createOrder(createOrderCommand: CreateOrderCommand): F[Order] =
       TransactionMrg[F].startTX { implicit askTX =>
 
@@ -25,12 +48,41 @@ object OrderAppService {
         for {
           createdOrder <- Order.create(orderItems, createOrderCommand.address)
           _ <- OrderRepository[F].save(createdOrder)
-
-          orderEvent <- OrderEvent(createdOrder.id, OrderCreated(
-            createdOrder.totalPrice, createdOrder.address, createdOrder.items, createdOrder.createdAt
-          ))
-          _ <- OrderEventDispatcher[F].dispatch(Chain.one(orderEvent))
         } yield createdOrder
+    }
+
+    override def changeProductCount(orderId: String, command: ChangeProductCountCommand)(
+      implicit R: Raise[F, OrderError]
+    ): F[Unit] =
+      TransactionMrg[F].startTX { implicit askTX =>
+        for {
+          maybeOrder <- OrderRepository[F].getById(orderId)
+          _ <- R.raise(OrderNotFound(orderId)).whenA(maybeOrder.isEmpty)
+          implicit0(order: Ask[F, Order]) = Ask.const[F, Order](maybeOrder.get)
+          _ <- Order.changeProductCount[F](command.productId, command.count) >>= OrderRepository[F].save
+        } yield ()
+      }
+
+    override def pay(orderId: String, command: PayOrderCommand)(
+      implicit R: Raise[F, OrderError]
+    ): F[Unit] =
+      TransactionMrg[F].startTX { implicit askTX =>
+        for {
+          maybeOrder <- OrderRepository[F].getById(orderId)
+          _ <- R.raise(OrderNotFound(orderId)).whenA(maybeOrder.isEmpty)
+          implicit0(order: Ask[F, Order]) = Ask.const[F, Order](maybeOrder.get)
+          _ <- Order.pay[F](command.paidPrice) >>= OrderRepository[F].save
+        } yield ()
+      }
+
+    override def changeAddressDetail(
+      orderId: String, detail: String)(implicit R: Raise[F, OrderError]): F[Unit] = TransactionMrg[F].startTX { implicit askTX =>
+      for {
+        maybeOrder <- OrderRepository[F].getById(orderId)
+        _ <- R.raise(OrderNotFound(orderId)).whenA(maybeOrder.isEmpty)
+        implicit0(order: Ask[F, Order]) = Ask.const[F, Order](maybeOrder.get)
+        _ <- Order.changeAddressDetail[F](detail) >>= OrderRepository[F].save
+      } yield ()
     }
   }
 }

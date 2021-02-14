@@ -1,10 +1,11 @@
 package com.zhpooer.ecommerce.order.order.model
 
 import cats.Monad
+import cats.data.Chain
 import cats.effect.Timer
-import com.zhpooer.ecommerce.order.order.{OrderError, OrderIdGen, OrderIdGenAlg}
+import com.zhpooer.ecommerce.order.order.{OrderCreated, OrderError, OrderEvent, OrderEventDispatcher, OrderIdGen, OrderIdGenAlg}
 import cats.implicits._
-import cats.mtl.{Ask, Raise}
+import cats.mtl.{Ask, Raise, Tell}
 
 import java.time.Instant
 import java.util.concurrent.TimeUnit
@@ -32,16 +33,22 @@ case class Address(
 )
 
 object Order {
-  def create[F[_]: Timer: OrderIdGenAlg: Monad](items: List[OrderItem], address: Address): F[Order] = {
+
+  def create[F[_]: Timer: OrderIdGenAlg: Monad: OrderEventDispatcher: Tell[*[_], Chain[OrderEvent]]](
+    items: List[OrderItem], address: Address): F[Order] = {
     val totalPrice = items.map(i => i.count * i.itemPrice).sum
     for {
       orderId <- OrderIdGen[F].gen
       now <- Timer[F].clock.monotonic(TimeUnit.MILLISECONDS).map(Instant.ofEpochMilli)
-    } yield Order(
-      id = orderId, items = items,
-      totalPrice = totalPrice, status = OrderStatus.Created,
-      address = address, createdAt = now
-    )
+      o = Order(
+        id = orderId, items = items,
+        totalPrice = totalPrice, status = OrderStatus.Created,
+        address = address, createdAt = now
+      )
+      _ <- OrderEventDispatcher[F].tell(orderId, OrderCreated(
+        o.totalPrice, o.address, o.items, o.createdAt
+      ))
+    } yield o
   }
 
   def changeProductCount[F[_]: Monad](productId: String, count: Int)(

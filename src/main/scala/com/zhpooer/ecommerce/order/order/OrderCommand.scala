@@ -13,5 +13,9 @@ object OrderCommand {
     count: Int,
     itemPrice: BigDecimal
   )
+
+  case class ChangeProductCountCommand(productId: String, count: Int)
+
+  case class PayOrderCommand(paidPrice: BigDecimal)
 }
 

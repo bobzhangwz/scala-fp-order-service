@@ -6,7 +6,6 @@ import doobie.util.transactor.Transactor
 import doobie._
 import doobie.implicits._
 import cats.implicits._
-import cats.Monad
 import cats.effect.Bracket
 import io.circe._
 import io.circe.syntax._
@@ -32,7 +31,7 @@ object OrderRepository {
   })
   implicit def jsonPut[T: Encoder]: Put[T] = Put[String].contramap[T](_.asJson.noSpaces)
 
-  def impl[F[_]: Monad: Bracket[*[_], Throwable] ]: OrderRepositoryAlg[F] = new OrderRepositoryAlg[F] {
+  def impl[F[_]: Bracket[*[_], Throwable] ]: OrderRepositoryAlg[F] = new OrderRepositoryAlg[F] {
     def getById(id: String)(implicit A: Ask[F,Transactor[F]]): F[Option[Order]] = {
       val query = sql"SELECT JSON_CONTENT FROM ORDERS WHERE ID = ${id}".query[Order].option
       A.ask.flatMap { tx => query.transact(tx) }

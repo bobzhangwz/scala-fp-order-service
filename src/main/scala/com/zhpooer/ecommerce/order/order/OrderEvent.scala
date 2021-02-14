@@ -1,11 +1,10 @@
 package com.zhpooer.ecommerce.order.order
 
-import com.zhpooer.ecommerce.order.order.model.Address
-import com.zhpooer.ecommerce.order.order.model.OrderItem
-import java.time.Instant
-import cats.effect.Timer
+import cats.effect.{Sync, Timer}
 import cats.implicits._
-import cats.effect.Sync
+import com.zhpooer.ecommerce.order.order.model.{Address, OrderItem}
+
+import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
