@@ -8,10 +8,10 @@ object DBManager {
     for {
       ce <- ExecutionContexts.fixedThreadPool[F](32)
       xa <- HikariTransactor.newHikariTransactor[F](
-        "org.h2.Driver",
-        "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1",
-        "sa",
-        "",
+        "com.mysql.cj.jdbc.Driver",
+        "jdbc:mysql://db:3306/db_orders",
+        "mysql",
+        "1234",
         ce,
         blocker
       )

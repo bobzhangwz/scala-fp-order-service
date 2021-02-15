@@ -1,0 +1,34 @@
+services:
+  app:
+    image: hseeberger/scala-sbt:8u265_1.4.5_2.13.4
+    environment:
+      - API_PORT=8081
+      - "API_ENDPOINT=0.0.0.0"
+      - DB_DRIVER=com.mysql.cj.jdbc.Driver
+      - DB_URL=jdbc:mysql://db:3306/db_orders
+      - DB_PASSWORD=1234
+      - DB_USER=mysql
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+    working_dir: /app
+    volumes:
+      - ./:/app
+      - ~/.ivy2:/root/.ivy2
+      - coursier-catch:/root/.cache/coursier
+  db:
+    image: library/mysql:8.0
+    environment:
+      - MYSQL_DATABASE=db_orders
+      - MYSQL_PASSWORD=1234
+      - MYSQL_ROOT_PASSWORD=1234
+      - MYSQL_USER=mysql
+    ports:
+      - 3306:3306
+    volumes:
+      - mysqldata:/var/lib/mysql
+
+volumes:
+  mysqldata: {}
+  coursier-catch: {}

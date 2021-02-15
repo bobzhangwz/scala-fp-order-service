@@ -1,3 +1,5 @@
+import scala.util.Properties._
+
 val Http4sVersion = "0.21.16"
 val CirceVersion = "0.13.0"
 val MunitVersion = "0.7.20"
@@ -34,3 +36,10 @@ lazy val root = (project in file("."))
     testFrameworks += new TestFramework("munit.Framework")
   )
 scalacOptions += "-Ymacro-annotations"
+
+enablePlugins(FlywayPlugin)
+
+flywayUrl := envOrElse("DB_URL", "jdbc:mysql://db:3306/db_orders")
+flywayUser := envOrElse("DB_USER", "mysql")
+flywayPassword := envOrElse("DB_PASSWORD", "1234")
+flywayLocations += "filesystem:db/migration"
