@@ -6,6 +6,7 @@ val MunitVersion = "0.7.20"
 val LogbackVersion = "1.2.3"
 val MunitCatsEffectVersion = "0.13.0"
 val DoobieVersion = "0.9.0"
+val EffVersion = "5.13.0"
 
 lazy val root = (project in file("."))
   .settings(
@@ -18,6 +19,9 @@ lazy val root = (project in file("."))
       "org.http4s"      %% "http4s-blaze-client" % Http4sVersion,
       "org.http4s"      %% "http4s-circe"        % Http4sVersion,
       "org.http4s"      %% "http4s-dsl"          % Http4sVersion,
+      "org.atnos"       %% "eff"                 % EffVersion,
+      "org.atnos"       %% "eff-macros"          % EffVersion,
+      "org.atnos"       %% "eff-cats-effect"     % EffVersion,
       "org.typelevel"   %% "cats-mtl"            % "1.1.1",
       "org.typelevel"   %% "cats-tagless-macros" % "0.12",
       "io.circe"        %% "circe-parser"        % CirceVersion,
