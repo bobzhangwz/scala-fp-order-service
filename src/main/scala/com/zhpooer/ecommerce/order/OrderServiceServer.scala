@@ -13,14 +13,20 @@ import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.Logger
 
 import scala.concurrent.ExecutionContext.global
+import com.zhpooer.ecommerce.order.configuration.ConfigLoader
+import com.zhpooer.ecommerce.order.configuration.AppConfig
 
 object OrderServiceServer {
 
-  def stream[F[_]: ConcurrentEffect: ContextShift](implicit T: Timer[F]): Stream[F, Nothing] = {
+  def server[F[_]: ConcurrentEffect: ContextShift](implicit T: Timer[F]): Stream[F, Nothing] =
+    Stream.eval(new ConfigLoader(sys.env).load[F]) >>= { appConfig =>
+      serverStream(appConfig)
+    }
 
+  def serverStream[F[_]: ConcurrentEffect: ContextShift](appConfig: AppConfig)(implicit T: Timer[F]): Stream[F, Nothing] = {
     val blockAndTransactor = for {
       blocker <- Blocker[F]
-      transactor <- DBManager.transactor[F](blocker)
+      transactor <- DBManager.transactor[F](appConfig.dbConfig, blocker)
     } yield (blocker, transactor)
 
     Stream.resource(blockAndTransactor) >>= { case (_, transactor) =>
@@ -46,6 +52,5 @@ object OrderServiceServer {
           .serve
       } yield exitCode
     }
-
   }.drain
 }

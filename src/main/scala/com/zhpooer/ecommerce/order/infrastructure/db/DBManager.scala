@@ -4,16 +4,12 @@ import doobie._
 import doobie.hikari._
 
 object DBManager {
-  def transactor[F[_]: Async: ContextShift](blocker: Blocker): Resource[F, Transactor[F]] =
+  def transactor[F[_]: Async: ContextShift](dbConfig: DBConfig, blocker: Blocker): Resource[F, Transactor[F]] =
     for {
       ce <- ExecutionContexts.fixedThreadPool[F](32)
       xa <- HikariTransactor.newHikariTransactor[F](
-        "com.mysql.cj.jdbc.Driver",
-        "jdbc:mysql://db:3306/db_orders",
-        "mysql",
-        "1234",
-        ce,
-        blocker
+        dbConfig.driver, dbConfig.url, dbConfig.user, dbConfig.password.value,
+        ce, blocker
       )
     } yield xa
 }
