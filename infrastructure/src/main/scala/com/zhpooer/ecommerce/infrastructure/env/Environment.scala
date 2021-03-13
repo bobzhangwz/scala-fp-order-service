@@ -1,4 +1,4 @@
-package com.zhpooer.ecommerce.order.infrastructure.env
+package com.zhpooer.ecommerce.infrastructure.env
 
 import cats.Applicative
 
@@ -13,4 +13,3 @@ object Environment {
     def env: F[Map[String,String]] = Applicative[F].pure(sys.env)
   }
 }
-

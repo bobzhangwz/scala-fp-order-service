@@ -2,7 +2,7 @@ package com.zhpooer.ecommerce.order.order
 
 import cats.effect.Sync
 import cats.implicits._
-import com.zhpooer.ecommerce.order.infrastructure.ErrorHandler
+import com.zhpooer.ecommerce.infrastructure.ErrorHandler
 import com.zhpooer.ecommerce.order.order.OrderCommand.{ChangeProductCountCommand, CreateOrderCommand}
 import com.zhpooer.ecommerce.order.order.model.Order
 import io.circe.generic.semiauto._
@@ -54,4 +54,3 @@ object OrderRoutes {
     }
   }
 }
-

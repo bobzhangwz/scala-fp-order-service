@@ -35,11 +35,20 @@ addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.11.3" cross Cross
 addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1")
 
 testFrameworks += new TestFramework("munit.Framework")
+
+lazy val infrastructure = project.settings(
+  name := "infrastructure",
+  libraryDependencies ++= Seq(),
+  addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.11.3" cross CrossVersion.full),
+  addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1")
+)
+
+
 lazy val root = (project in file("."))
   .settings(
     name := "order-service",
     libraryDependencies ++= Seq()
-  )
+  ).dependsOn(infrastructure)
 
 enablePlugins(FlywayPlugin)
 

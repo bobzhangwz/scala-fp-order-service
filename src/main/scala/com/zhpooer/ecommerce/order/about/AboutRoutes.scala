@@ -1,8 +1,7 @@
 package com.zhpooer.ecommerce.order.about
 
-import com.zhpooer.ecommerce.order.infrastructure.env.EnvironmentAlg
+import com.zhpooer.ecommerce.infrastructure.env._
 import cats.implicits._
-import com.zhpooer.ecommerce.order.infrastructure.env.Environment
 import cats.effect.Sync
 import org.http4s.HttpRoutes
 import org.http4s.dsl.Http4sDsl
@@ -63,4 +62,3 @@ object AboutRoutes {
     }
   }
 }
-

@@ -1,4 +1,4 @@
-package com.zhpooer.ecommerce.order.infrastructure.db
+package com.zhpooer.ecommerce.infrastructure.db
 import cats.effect._
 import doobie._
 import doobie.hikari._

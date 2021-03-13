@@ -1,6 +1,6 @@
 package com.zhpooer.ecommerce.order.configuration
 
-import com.zhpooer.ecommerce.order.infrastructure.db.DBConfig
+import com.zhpooer.ecommerce.infrastructure.db.DBConfig
 import ciris.ConfigValue
 import cats.effect.Async
 import cats.effect.ContextShift
@@ -13,7 +13,6 @@ case class AppConfig(
 )
 
 case class ApiConfig(endpoint: String, port: Int)
-
 
 class ConfigLoader(envMap: Map[String, String]) {
   def load[F[_]: Async: ContextShift]: F[AppConfig] = appConfig.load
@@ -32,7 +31,7 @@ class ConfigLoader(envMap: Map[String, String]) {
   def apiConfig: ConfigValue[ApiConfig] =
     for {
       port     <- fromEnv("API_PORT").as[Int].default(8081)
-      endpoint <- fromEnv("API_ENDPOINT")
+      endpoint <- fromEnv("API_ENDPOINT").default("0.0.0.0")
     } yield ApiConfig(endpoint, port)
 
   def fromEnv(name: String): ConfigValue[String] = {

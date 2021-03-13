@@ -5,7 +5,7 @@ import cats.data.Chain
 import cats.effect.Timer
 import cats.implicits._
 import cats.mtl.{Ask, Raise, Tell}
-import com.zhpooer.ecommerce.order.infrastructure.db.TransactionMrg
+import com.zhpooer.ecommerce.infrastructure.db.TransactionMrg
 import com.zhpooer.ecommerce.order.order.OrderCommand.{ChangeProductCountCommand, CreateOrderCommand, PayOrderCommand}
 import com.zhpooer.ecommerce.order.order.OrderError.OrderNotFound
 import com.zhpooer.ecommerce.order.order.model.{Order, OrderItem}

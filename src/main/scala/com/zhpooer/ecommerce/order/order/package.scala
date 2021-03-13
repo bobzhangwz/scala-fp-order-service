@@ -1,7 +1,7 @@
 package com.zhpooer.ecommerce.order
 
 import cats.effect.{Sync, Timer}
-import com.zhpooer.ecommerce.order.infrastructure.db.TransactionMrg
+import com.zhpooer.ecommerce.infrastructure.db.TransactionMrg
 
 package object order {
   object alg {

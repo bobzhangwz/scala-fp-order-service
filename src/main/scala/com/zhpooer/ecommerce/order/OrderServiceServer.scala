@@ -3,8 +3,8 @@ package com.zhpooer.ecommerce.order
 import cats.effect.{Blocker, ConcurrentEffect, ContextShift, Timer}
 import cats.implicits._
 import com.zhpooer.ecommerce.order.about.{AboutAlg, AboutRoutes}
-import com.zhpooer.ecommerce.order.infrastructure.db.{DBManager, TransactionMrg}
-import com.zhpooer.ecommerce.order.infrastructure.env._
+import com.zhpooer.ecommerce.infrastructure.db.{DBManager, TransactionMrg}
+import com.zhpooer.ecommerce.infrastructure.env._
 import com.zhpooer.ecommerce.order.order.OrderRoutes
 import fs2.Stream
 import org.http4s.client.blaze.BlazeClientBuilder
@@ -18,12 +18,12 @@ import com.zhpooer.ecommerce.order.configuration.AppConfig
 
 object OrderServiceServer {
 
-  def server[F[_]: ConcurrentEffect: ContextShift](implicit T: Timer[F]): Stream[F, Nothing] =
+  def serve[F[_]: ConcurrentEffect: ContextShift](implicit T: Timer[F]): Stream[F, Nothing] =
     Stream.eval(new ConfigLoader(sys.env).load[F]) >>= { appConfig =>
       serverStream(appConfig)
     }
 
-  def serverStream[F[_]: ConcurrentEffect: ContextShift](appConfig: AppConfig)(implicit T: Timer[F]): Stream[F, Nothing] = {
+  private def serverStream[F[_]: ConcurrentEffect: ContextShift](appConfig: AppConfig)(implicit T: Timer[F]): Stream[F, Nothing] = {
     val blockAndTransactor = for {
       blocker <- Blocker[F]
       transactor <- DBManager.transactor[F](appConfig.dbConfig, blocker)
@@ -45,9 +45,10 @@ object OrderServiceServer {
         ).orNotFound
 
         finalHttpApp = Logger.httpApp(true, true)(httpApp)
+        apiConfig = appConfig.apiConfig
 
         exitCode <- BlazeServerBuilder[F](global)
-          .bindHttp(8080, "0.0.0.0")
+          .bindHttp(apiConfig.port, apiConfig.endpoint)
           .withHttpApp(finalHttpApp)
           .serve
       } yield exitCode

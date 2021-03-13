@@ -1,4 +1,4 @@
-package com.zhpooer.ecommerce.order.infrastructure
+package com.zhpooer.ecommerce.infrastructure
 
 import cats.mtl.Raise
 import cats.{Functor, MonadError}
