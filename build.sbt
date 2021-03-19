@@ -47,7 +47,10 @@ lazy val infrastructure = project.settings(
 lazy val root = (project in file("."))
   .settings(
     name := "order-service",
-    libraryDependencies ++= Seq()
+    libraryDependencies ++= Seq(
+      "software.amazon.awssdk" % "sqs" % "2.16.20",
+      "software.amazon.awssdk" % "sns" % "2.16.20"
+    )
   ).dependsOn(infrastructure)
 
 enablePlugins(FlywayPlugin)

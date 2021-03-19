@@ -6,18 +6,36 @@ import cats.effect.Async
 import cats.effect.ContextShift
 import ciris.ConfigKey
 import cats.implicits._
+import java.net.URI
+import cats.effect.IO
+import software.amazon.awssdk.services.sns.SnsClient
 
-case class AppConfig(
+case class AppEnv(
   apiConfig: ApiConfig,
-  dbConfig: DBConfig
+  dbConfig: DBConfig,
+  orderEventPublisherArn: String,
+  snsClient: SnsClient
 )
 
 case class ApiConfig(endpoint: String, port: Int)
 
 class ConfigLoader(envMap: Map[String, String]) {
-  def load[F[_]: Async: ContextShift]: F[AppConfig] = appConfig.load
+  def load[F[_]: Async: ContextShift]: F[AppEnv] = appConfig.load
 
-  def appConfig: ConfigValue[AppConfig] = (apiConfig, dbConfig).mapN(AppConfig.apply)
+  def appConfig: ConfigValue[AppEnv] =
+    (apiConfig, dbConfig, orderEventPublisherArn, snsClient).mapN(AppEnv.apply)
+
+  def orderEventPublisherArn: ConfigValue[String] = fromEnv("ORDER_EVENT_PUBLISHER_ARN")
+
+  def snsClient: ConfigValue[SnsClient] =
+    fromEnv("AWS_OVERRIDE_ENDPOINT").evalMap(s => IO.delay(URI.create(s))).option.evalMap { maybeOverrideEndpoint =>
+      val builder = SnsClient.builder()
+      IO.delay {
+        maybeOverrideEndpoint.map(builder.endpointOverride(_))
+          .getOrElse(builder)
+          .build()
+      }
+    }
 
   def dbConfig: ConfigValue[DBConfig] = {
     for {

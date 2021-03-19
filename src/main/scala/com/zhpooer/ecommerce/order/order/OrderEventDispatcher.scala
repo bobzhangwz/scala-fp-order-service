@@ -4,6 +4,10 @@ import cats.data.Chain
 import cats.effect.{Sync, Timer}
 import cats.implicits._
 import cats.mtl.Tell
+import software.amazon.awssdk.services.sns.model.PublishRequest
+import io.circe.syntax._
+import io.circe.generic.auto._
+import software.amazon.awssdk.services.sns.SnsClient
 
 trait OrderEventDispatcher[F[_]] {
   def dispatch(events: Chain[OrderEvent]): F[Unit]
@@ -11,13 +15,21 @@ trait OrderEventDispatcher[F[_]] {
 }
 
 object OrderEventDispatcher {
+
   def apply[F[_]: OrderEventDispatcher]: OrderEventDispatcher[F] = implicitly
 
-  def impl[F[_]: Sync: Timer]: OrderEventDispatcher[F] = new OrderEventDispatcher[F] {
-    override def dispatch(events: Chain[OrderEvent]): F[Unit] =
-      events.traverse_(e => Sync[F].delay({
-        println("Dispatching event: " + e)
-      }))
+  def impl[F[_]: Sync: Timer](snsClient: SnsClient, orderEventPublishQueueArn: String): OrderEventDispatcher[F] = new OrderEventDispatcher[F] {
+
+    override def dispatch(events: Chain[OrderEvent]): F[Unit] = {
+      events.traverse_(e => {
+        val request = PublishRequest.builder()
+          .message(e.asJson.noSpaces)
+          .targetArn(orderEventPublishQueueArn)
+          .build()
+
+        Sync[F].delay({snsClient.publish(request)})
+      })
+    }
 
     override def tell(
       orderId: String, detail: OrderEventDetail)(implicit T: Tell[F, Chain[OrderEvent]]): F[Unit] = {

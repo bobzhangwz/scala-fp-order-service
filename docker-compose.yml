@@ -8,10 +8,14 @@ services:
       - DB_URL=jdbc:mysql://db:3306/db_orders
       - DB_PASSWORD=1234
       - DB_USER=mysql
+      - ORDER_EVENT_PUBLISHER_ARN="arn:aws:sns:ap-east-1:000000000000:order-event-publisher:3aeb488e-bbc7-4452-9138-6f29a4bc0a2"
+      - AWS_OVERRIDE_ENDPOINT=http://localstack:4566
+      - AWS_REGION=ap-east-1
     ports:
       - 8080:8080
     depends_on:
       - db
+      - localstack
     working_dir: /app
     volumes:
       - ./:/app
@@ -28,6 +32,19 @@ services:
       - 3306:3306
     volumes:
       - mysqldata:/var/lib/mysql
+
+  localstack:
+    image: localstack/localstack
+    ports:
+      - "4566:4566"
+      - "4571:4571"
+    environment:
+      - SERVICES=sqs,sns
+      - DEBUG=${DEBUG- }
+      - DEFAULT_REGION=ap-east-1
+      # - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - ./ops/local:/docker-entrypoint-initaws.d
 
 volumes:
   mysqldata: {}
