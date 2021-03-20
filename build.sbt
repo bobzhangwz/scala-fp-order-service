@@ -38,7 +38,10 @@ testFrameworks += new TestFramework("munit.Framework")
 
 lazy val infrastructure = project.settings(
   name := "infrastructure",
-  libraryDependencies ++= Seq(),
+  libraryDependencies ++= Seq(
+    "software.amazon.awssdk" % "sqs" % "2.16.20",
+    "software.amazon.awssdk" % "sns" % "2.16.20"
+  ),
   addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.11.3" cross CrossVersion.full),
   addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1")
 )
@@ -48,8 +51,6 @@ lazy val root = (project in file("."))
   .settings(
     name := "order-service",
     libraryDependencies ++= Seq(
-      "software.amazon.awssdk" % "sqs" % "2.16.20",
-      "software.amazon.awssdk" % "sns" % "2.16.20"
     )
   ).dependsOn(infrastructure)
 

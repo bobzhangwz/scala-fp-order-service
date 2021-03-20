@@ -1,8 +1,8 @@
 package com.zhpooer.ecommerce.order
 
 import cats.effect.{Sync, Timer}
-import com.zhpooer.ecommerce.infrastructure.DomainEvent
 import com.zhpooer.ecommerce.infrastructure.db.TransactionMrg
+import com.zhpooer.ecommerce.infrastructure.event.{DomainEvent, DomainEventDispatcher}
 import software.amazon.awssdk.services.sns.SnsClient
 
 package object order {

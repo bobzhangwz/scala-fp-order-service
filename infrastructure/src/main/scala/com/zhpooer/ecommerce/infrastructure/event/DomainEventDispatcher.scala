@@ -1,10 +1,10 @@
-package com.zhpooer.ecommerce.order.order
+package com.zhpooer.ecommerce.infrastructure.event
+
 
 import cats.data.Chain
 import cats.effect.{Sync, Timer}
 import cats.implicits._
 import cats.mtl.Tell
-import com.zhpooer.ecommerce.infrastructure.DomainEvent
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import io.circe.syntax._
 import io.circe.generic.auto._

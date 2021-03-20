@@ -1,4 +1,4 @@
-package com.zhpooer.ecommerce.infrastructure
+package com.zhpooer.ecommerce.infrastructure.event
 
 import cats.effect.{Sync, Timer}
 import cats.implicits._
