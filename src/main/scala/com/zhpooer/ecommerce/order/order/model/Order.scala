@@ -3,7 +3,7 @@ package com.zhpooer.ecommerce.order.order.model
 import cats.Monad
 import cats.data.Chain
 import cats.effect.Timer
-import com.zhpooer.ecommerce.order.order.{OrderCreated, OrderError, OrderEvent, OrderEventDispatcher, OrderIdGen, OrderIdGenAlg}
+import com.zhpooer.ecommerce.order.order._
 import cats.implicits._
 import cats.mtl.{Ask, Raise, Tell}
 
@@ -34,7 +34,7 @@ case class Address(
 
 object Order {
 
-  def create[F[_]: Timer: OrderIdGenAlg: Monad: OrderEventDispatcher: Tell[*[_], Chain[OrderEvent]]](
+  def create[F[_]: Timer: OrderIdGenAlg: Monad: OrderEventDispatcher: Tell[*[_], Chain[OrderDomainEvent]]](
     items: List[OrderItem], address: Address): F[Order] = {
     val totalPrice = items.map(i => i.count * i.itemPrice).sum
     for {
@@ -45,7 +45,7 @@ object Order {
         totalPrice = totalPrice, status = OrderStatus.Created,
         address = address, createdAt = now
       )
-      _ <- OrderEventDispatcher[F].tell(orderId, OrderCreated(
+      _ <- OrderEventDispatcher[F].tell[OrderEventDetail](orderId, OrderCreated(
         o.totalPrice, o.address, o.items, o.createdAt
       ))
     } yield o

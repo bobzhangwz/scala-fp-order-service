@@ -28,14 +28,17 @@ class ConfigLoader(envMap: Map[String, String]) {
   def orderEventPublisherArn: ConfigValue[String] = fromEnv("ORDER_EVENT_PUBLISHER_ARN")
 
   def snsClient: ConfigValue[SnsClient] =
-    fromEnv("AWS_OVERRIDE_ENDPOINT").evalMap(s => IO.delay(URI.create(s))).option.evalMap { maybeOverrideEndpoint =>
-      val builder = SnsClient.builder()
-      IO.delay {
-        maybeOverrideEndpoint.map(builder.endpointOverride(_))
-          .getOrElse(builder)
-          .build()
+    fromEnv("AWS_OVERRIDE_ENDPOINT")
+      .evalMap(s => IO.delay(URI.create(s)))
+      .option
+      .evalMap { maybeOverrideEndpoint =>
+        val builder = SnsClient.builder()
+        IO.delay {
+          maybeOverrideEndpoint.map(builder.endpointOverride(_))
+            .getOrElse(builder)
+            .build()
+        }
       }
-    }
 
   def dbConfig: ConfigValue[DBConfig] = {
     for {

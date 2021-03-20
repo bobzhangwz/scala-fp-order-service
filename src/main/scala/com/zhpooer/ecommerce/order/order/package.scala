@@ -5,6 +5,8 @@ import com.zhpooer.ecommerce.infrastructure.db.TransactionMrg
 import software.amazon.awssdk.services.sns.SnsClient
 
 package object order {
+  type OrderDomainEvent = DomainEvent[OrderEventDetail]
+
   object alg {
     def orderAlg[F[_]: Timer: Sync: TransactionMrg](snsClient: SnsClient, orderEventPublisherArn: String): OrderAppService[F] = {
       implicit val orderRepositoryImpl = OrderRepository.impl[F]
