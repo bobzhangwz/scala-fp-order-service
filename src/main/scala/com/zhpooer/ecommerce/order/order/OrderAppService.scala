@@ -33,7 +33,7 @@ object OrderAppService {
     F[_]: Timer: Monad: OrderIdGenAlg : OrderEventDispatcher: TransactionMrg: OrderRepositoryAlg
   ]: OrderAppService[F] = new OrderAppService[F] {
 
-    implicit val tellInstance = new Tell[F, Chain[OrderDomainEvent]] {
+    implicit val tellInstance: Tell[F, Chain[OrderDomainEvent]] = new Tell[F, Chain[OrderDomainEvent]] {
       override def functor: Functor[F] = implicitly
       override def tell(l: Chain[OrderDomainEvent]): F[Unit] = implicitly[OrderEventDispatcher[F]].dispatch(l)
     }

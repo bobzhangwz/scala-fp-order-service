@@ -4,38 +4,41 @@ import cats.data.Chain
 import cats.effect.{Sync, Timer}
 import cats.implicits._
 import cats.mtl.Tell
+import com.zhpooer.ecommerce.infrastructure.DomainEvent
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import io.circe.syntax._
 import io.circe.generic.auto._
 import software.amazon.awssdk.services.sns.SnsClient
 import io.circe.Encoder
 
-trait DomainEventDispatcher[F[_]] {
-  def dispatch[T](events: Chain[DomainEvent[T]])(implicit E: Encoder[T]): F[Unit]
-  def tell[S](orderId: String, detail: S)(implicit T: Tell[F, Chain[DomainEvent[S]]]): F[Unit]
+trait DomainEventDispatcher[F[_], A] {
+  def dispatch(events: Chain[DomainEvent[A]]): F[Unit]
+  def tell(orderId: String, detail: A)(implicit T: Tell[F, Chain[DomainEvent[A]]]): F[Unit]
 }
 
 object DomainEventDispatcher {
 
-  def apply[F[_]: DomainEventDispatcher]: DomainEventDispatcher[F] = implicitly
+  class PartialDomainEventDispatcher[F[_]] {
+    def apply[A](implicit d: DomainEventDispatcher[F, A]): DomainEventDispatcher[F, A] = d
+  }
 
-  def impl[F[_]: Sync: Timer](snsClient: SnsClient, orderEventPublishQueueArn: String): DomainEventDispatcher[F] = new DomainEventDispatcher[F] {
+  def impl[F[_]: Sync: Timer, A: Encoder](snsClient: SnsClient, eventPublishQueueArn: String): DomainEventDispatcher[F, A] = new DomainEventDispatcher[F, A] {
 
-    def dispatch[T](events: Chain[DomainEvent[T]])(implicit E: Encoder[T]): F[Unit] = {
+    def dispatch(events: Chain[DomainEvent[A]]): F[Unit] = {
       events.traverse_(e => {
         val request = PublishRequest.builder()
           .message(e.asJson.noSpaces)
-          .targetArn(orderEventPublishQueueArn)
+          .messageDeduplicationId(e.eventId)
+          .targetArn(eventPublishQueueArn)
           .build()
 
         Sync[F].delay({snsClient.publish(request)})
       })
     }
 
-    def tell[S](
-      id: String, detail: S)(implicit T: Tell[F, Chain[DomainEvent[S]]]): F[Unit] = {
+    def tell(id: String, detail: A)(implicit T: Tell[F, Chain[DomainEvent[A]]]): F[Unit] = {
       for {
-        event: DomainEvent[S] <- DomainEvent[F, S](id, detail)
+        event: DomainEvent[A] <- DomainEvent[F, A](id, detail)
         _ <- Tell.tellF[F](Chain.one(event))
       } yield ()
     }

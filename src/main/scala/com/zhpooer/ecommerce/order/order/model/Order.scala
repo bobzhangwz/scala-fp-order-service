@@ -45,7 +45,7 @@ object Order {
         totalPrice = totalPrice, status = OrderStatus.Created,
         address = address, createdAt = now
       )
-      _ <- OrderEventDispatcher[F].tell[OrderEventDetail](orderId, OrderCreated(
+      _ <- implicitly[OrderEventDispatcher[F]].tell(orderId, OrderCreated(
         o.totalPrice, o.address, o.items, o.createdAt
       ))
     } yield o
