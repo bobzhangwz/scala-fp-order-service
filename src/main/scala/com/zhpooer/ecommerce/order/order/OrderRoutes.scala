@@ -57,11 +57,11 @@ object OrderRoutes {
             resp <- Ok()
           } yield resp
         }
+
       case GET -> Root / "orders" / orderId =>
         orderErrorHandler { implicit raise =>
           orderReprService.getById(orderId) >>= (Ok(_))
         }
     }
-
   }
 }

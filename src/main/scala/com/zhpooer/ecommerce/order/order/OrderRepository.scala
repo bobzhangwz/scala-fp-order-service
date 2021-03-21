@@ -3,16 +3,12 @@ package com.zhpooer.ecommerce.order.order
 import com.zhpooer.ecommerce.order.order.model.Order
 import cats.mtl.Ask
 import doobie.util.transactor.Transactor
-import doobie._
 import doobie.implicits._
 import cats.implicits._
 import cats.effect.Bracket
+import com.zhpooer.ecommerce.infrastructure.db.JsonOperation
 import io.circe._
-import io.circe.syntax._
 import io.circe.generic.semiauto._
-import io.circe.generic.auto._
-
-import scala.reflect.runtime.universe.TypeTag
 
 trait OrderRepositoryAlg[F[_]] {
   def getById(id: String)(implicit A: Ask[F, Transactor[F]]): F[Option[Order]]
@@ -23,15 +19,16 @@ object OrderRepository {
 
   def apply[F[_]: OrderRepositoryAlg]: OrderRepositoryAlg[F] = implicitly
 
-  implicit val orderDecoder: Decoder[Order] = deriveDecoder
-  implicit val orderEncoder: Encoder[Order] = deriveEncoder
+  implicit val orderDecoder: Decoder[Order] = {
+    import io.circe.generic.auto._
+    deriveDecoder
+  }
+  implicit val orderEncoder: Encoder[Order] = {
+    import io.circe.generic.auto._
+    deriveEncoder
+  }
 
-  implicit def jsonGet[T: Decoder: TypeTag]: Get[T] = Get[String].temap[T](jsonStr => {
-    parser.parse(jsonStr).flatMap(_.as[T]).leftMap(_.getMessage)
-  })
-  implicit def jsonPut[T: Encoder]: Put[T] = Put[String].contramap[T](_.asJson.noSpaces)
-
-  def impl[F[_]: Bracket[*[_], Throwable] ]: OrderRepositoryAlg[F] = new OrderRepositoryAlg[F] {
+  def impl[F[_]: Bracket[*[_], Throwable] ]: OrderRepositoryAlg[F] = new OrderRepositoryAlg[F] with JsonOperation {
     def getById(id: String)(implicit A: Ask[F,Transactor[F]]): F[Option[Order]] = {
       val query = sql"SELECT JSON_CONTENT FROM ORDERS WHERE ID = ${id}".query[Order].option
       A.ask.flatMap { tx => query.transact(tx) }
