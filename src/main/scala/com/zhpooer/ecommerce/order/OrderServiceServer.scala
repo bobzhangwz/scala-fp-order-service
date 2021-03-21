@@ -37,11 +37,11 @@ object OrderServiceServer {
         implicit0(envAlg: EnvironmentAlg[F]) = Environment.impl[F]
 
         aboutAlg = AboutAlg.impl[F]
-        orderAlg = order.alg.orderAlg[F](appEnv.snsClient, appEnv.orderEventPublisherArn)
+        orderAlg = order.alg[F](appEnv.snsClient, appEnv.orderEventPublisherArn)
 
         httpApp = (
           AboutRoutes.all[F](aboutAlg) <+>
-            OrderRoutes.all[F](orderAlg)
+            OrderRoutes.all[F](orderAlg.orderAppSvc, orderAlg.orderReprSvc)
         ).orNotFound
 
         finalHttpApp = Logger.httpApp(true, true)(httpApp)

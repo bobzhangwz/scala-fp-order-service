@@ -10,8 +10,7 @@ import io.circe.generic.auto._
 sealed trait OrderEvent
 
 object OrderEvent {
-  implicit val orderEventDecoder: Encoder[OrderEvent] =
-    deriveEncoder
+  implicit val orderEventDecoder: Encoder[OrderEvent] = deriveEncoder
 }
 
 case class OrderAddressChanged(

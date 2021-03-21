@@ -4,11 +4,11 @@ import com.zhpooer.ecommerce.order.order.model.Address
 
 object OrderCommand {
   case class CreateOrderCommand(
-    items: List[OrderItemCommand],
+    items: List[CommandOrderItem],
     address: Address
   )
 
-  case class OrderItemCommand(
+  case class CommandOrderItem(
     productId: String,
     count: Int,
     itemPrice: BigDecimal
@@ -17,5 +17,7 @@ object OrderCommand {
   case class ChangeProductCountCommand(productId: String, count: Int)
 
   case class PayOrderCommand(paidPrice: BigDecimal)
+
+  case class ChangeAddressDetailCommand(detail: String)
 }
 

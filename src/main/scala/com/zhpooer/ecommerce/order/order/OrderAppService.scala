@@ -42,7 +42,7 @@ object OrderAppService {
       TransactionMrg[F].startTX { implicit askTX =>
 
         val orderItems = createOrderCommand.items.map {
-          case OrderCommand.OrderItemCommand(productId, count, itemPrice) =>
+          case OrderCommand.CommandOrderItem(productId, count, itemPrice) =>
             OrderItem(productId, count, itemPrice)
         }
         for {
