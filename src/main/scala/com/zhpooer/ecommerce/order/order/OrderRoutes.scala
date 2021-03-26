@@ -23,7 +23,7 @@ object OrderRoutes {
     import dsl._
     import org.http4s.circe.CirceEntityCodec._
 
-    val orderErrorHandler = ErrorHandler[F, OrderError].apply {
+    val orderErrorHandler = ErrorHandler[F, OrderError].handle {
       case e: OrderError.OrderNotFound => NotFound(e.message)
       case e: OrderError => Conflict(e.message)
     }

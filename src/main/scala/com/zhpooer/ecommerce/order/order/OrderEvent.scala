@@ -3,14 +3,21 @@ package com.zhpooer.ecommerce.order.order
 import com.zhpooer.ecommerce.order.order.model.{Address, OrderItem}
 
 import java.time.Instant
-import io.circe.Encoder
+import io.circe.{Decoder, Encoder}
 import io.circe.generic.semiauto._
-import io.circe.generic.auto._
 
 sealed trait OrderEvent
 
 object OrderEvent {
-  implicit val orderEventDecoder: Encoder[OrderEvent] = deriveEncoder
+  implicit val orderEventEncoder: Encoder[OrderEvent] = {
+    import io.circe.generic.auto._
+    deriveEncoder
+  }
+
+  implicit val orderEventDecoder: Decoder[OrderEvent] = {
+    import io.circe.generic.auto._
+    deriveDecoder
+  }
 }
 
 case class OrderAddressChanged(

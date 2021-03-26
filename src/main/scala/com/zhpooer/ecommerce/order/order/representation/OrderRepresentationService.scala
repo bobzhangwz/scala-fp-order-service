@@ -11,22 +11,22 @@ import io.circe.Encoder
 import io.circe.generic.semiauto._
 
 trait OrderRepresentationService[F[_]] {
-  def getById(id: String)(implicit R: Raise[F, OrderError]): F[OrderRepr]
-  def cqrsSync(orderId: String)(implicit R: Raise[F, OrderError]): F[Unit]
+  def getById(id: String)(implicit R: Raise[F, OrderError.OrderNotFound]): F[OrderRepr]
+  def cqrsSync(orderId: String)(implicit R: Raise[F, OrderError.OrderNotFound]): F[Unit]
 }
 
 object OrderRepresentationService {
   def apply[F[_] : OrderRepresentationService]: OrderRepresentationService[F] = implicitly
 
   def impl[F[_]: Bracket[*[_], Throwable]: OrderRepositoryAlg: TransactionMrg] = new OrderRepresentationService[F] with JsonOperation {
-    override def getById(id: String)(implicit R: Raise[F, OrderError]): F[OrderRepr] = TransactionMrg[F].readOnly { implicit tx =>
+    override def getById(id: String)(implicit R: Raise[F, OrderError.OrderNotFound]): F[OrderRepr] = TransactionMrg[F].readOnly { implicit tx =>
       OrderRepository[F].getById(id).flatMap {
         case None => R.raise(OrderError.OrderNotFound(id))
         case Some(order) => orderToRepr(order).pure[F]
       }
     }
 
-    override def cqrsSync(orderId: String)(implicit R: Raise[F, OrderError]): F[Unit] = {
+    override def cqrsSync(orderId: String)(implicit R: Raise[F, OrderError.OrderNotFound]): F[Unit] = {
       import doobie.implicits._
 
       implicit val orderSummaryEncoder: Encoder[OrderSummaryRepr] = {

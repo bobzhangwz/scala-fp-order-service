@@ -2,12 +2,13 @@ package com.zhpooer.ecommerce.infrastructure.event
 
 import cats.effect.{Sync, Timer}
 import cats.implicits._
-import io.circe.Encoder
+import io.circe.{Decoder, Encoder}
 
 import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import scala.reflect.ClassTag
+import io.circe.generic.semiauto._
 
 case class DomainEvent[T] private (
   eventId: String, subjectId: String,
@@ -29,4 +30,6 @@ object DomainEvent {
       (e.eventId, e.subjectId, e.createdAt, eventType, e.detail)
     }
   }
+
+  implicit def domainEventDecoder[T: Decoder]: Decoder[DomainEvent[T]] = deriveDecoder
 }
