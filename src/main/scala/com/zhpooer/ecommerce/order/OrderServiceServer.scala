@@ -53,7 +53,7 @@ object OrderServiceServer {
         new SQSEventSubscriber[F, OrderDomainEvent](appEnv.sqsClient, appEnv.orderEventListenerUrl, blocker)
       val orderEventProcessor = orderEventSubscriber.eventStream.evalMap(e =>
         orderAlg.orderReprSvc.cqrsSync(e.subjectId)(ErrorHandler.raiseAny[F, OrderError])
-      )
+      ).handleErrorWith(_ => Stream.emit(())).foreverM
 
       val httpApp = (
         AboutRoutes.all[F](aboutAlg) <+>

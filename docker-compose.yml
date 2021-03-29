@@ -1,19 +1,8 @@
 services:
   app:
     image: hseeberger/scala-sbt:8u265_1.4.5_2.13.4
-    environment:
-      - API_PORT=8081
-      - "API_ENDPOINT=0.0.0.0"
-      - DB_DRIVER=com.mysql.cj.jdbc.Driver
-      - DB_URL=jdbc:mysql://db:3306/db_orders
-      - DB_PASSWORD=1234
-      - DB_USER=mysql
-      - ORDER_EVENT_PUB_ARN="arn:aws:sns:ap-east-1:000000000000:order-event-publisher"
-      - ORDER_EVENT_LISTENER_URL="http://localstack:4566/000000000000/order/order-event-listener"
-      - AWS_OVERRIDE_ENDPOINT=http://localstack:4566
-      - AWS_REGION=ap-east-1
-      - AWS_ACCESS_KEY_ID=a
-      - AWS_SECRET_ACCESS_KEY=b
+    env_file:
+      - .env
     ports:
       - 8080:8080
     depends_on:
@@ -45,6 +34,7 @@ services:
       - SERVICES=sqs,sns
       - DEBUG=${DEBUG- }
       - DEFAULT_REGION=ap-east-1
+      - HOSTNAME=localstack
       # - DOCKER_HOST=unix:///var/run/docker.sock
     volumes:
       - ./ops/local:/docker-entrypoint-initaws.d
