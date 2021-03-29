@@ -1,4 +1,4 @@
-package com.zhpooer.ecommerce.order.order
+package com.zhpooer.ecommerce.infrastructure.event
 
 import cats.effect.{Blocker, ContextShift, ExitCase, Sync}
 import cats.implicits._
@@ -58,3 +58,4 @@ class SQSEventSubscriber[F[_]: Sync: ContextShift, E: Decoder](sqsClient: SqsCli
 
   }
 }
+

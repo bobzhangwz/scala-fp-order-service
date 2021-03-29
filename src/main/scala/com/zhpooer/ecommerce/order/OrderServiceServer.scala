@@ -6,7 +6,8 @@ import com.zhpooer.ecommerce.infrastructure.ErrorHandler
 import com.zhpooer.ecommerce.order.about.{AboutAlg, AboutRoutes}
 import com.zhpooer.ecommerce.infrastructure.db.{DBManager, TransactionMrg}
 import com.zhpooer.ecommerce.infrastructure.env._
-import com.zhpooer.ecommerce.order.order.{OrderDomainEvent, OrderError, OrderRoutes, SQSEventSubscriber}
+import com.zhpooer.ecommerce.infrastructure.event.SQSEventSubscriber
+import com.zhpooer.ecommerce.order.order.{OrderDomainEvent, OrderError, OrderRoutes}
 import fs2.Stream
 import org.http4s.client.blaze.BlazeClientBuilder
 import org.http4s.implicits._

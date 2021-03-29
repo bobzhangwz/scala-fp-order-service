@@ -18,7 +18,7 @@ trait OrderRepresentationService[F[_]] {
 object OrderRepresentationService {
   def apply[F[_] : OrderRepresentationService]: OrderRepresentationService[F] = implicitly
 
-  def impl[F[_]: Bracket[*[_], Throwable]: OrderRepositoryAlg: TransactionMrg] = new OrderRepresentationService[F] with JsonOperation {
+  def impl[F[_]: Bracket[*[_], Throwable]: OrderRepositoryAlg: TransactionMrg]: OrderRepresentationService[F] = new OrderRepresentationService[F] with JsonOperation {
     override def getById(id: String)(implicit R: Raise[F, OrderError.OrderNotFound]): F[OrderRepr] = TransactionMrg[F].readOnly { implicit tx =>
       OrderRepository[F].getById(id).flatMap {
         case None => R.raise(OrderError.OrderNotFound(id))
@@ -33,6 +33,7 @@ object OrderRepresentationService {
         import io.circe.generic.auto._
         deriveEncoder
       }
+      implicit val orderPut = jsonPut[OrderSummaryRepr]
 
       TransactionMrg[F].startTX { implicit txAsk =>
         for {
@@ -50,7 +51,10 @@ object OrderRepresentationService {
     }
   }
 
-  def orderToSummary(order: Order): OrderSummaryRepr = ???
+  def orderToSummary(order: Order): OrderSummaryRepr = order match {
+    case Order(id, _, totalPrice, status, address, createdAt) =>
+      OrderSummaryRepr(id, totalPrice, status, address, createdAt)
+  }
 
   def orderToRepr(order: Order): OrderRepr = order match {
     case Order(id, items, totalPrice, status, address, createdAt) =>

@@ -29,6 +29,10 @@ object OrderRepository {
   }
 
   def impl[F[_]: Bracket[*[_], Throwable] ]: OrderRepositoryAlg[F] = new OrderRepositoryAlg[F] with JsonOperation {
+
+    implicit val orderPut = jsonPut[Order]
+    implicit val orderGet = jsonGet[Order]
+
     def getById(id: String)(implicit A: Ask[F,Transactor[F]]): F[Option[Order]] = {
       val query = sql"SELECT JSON_CONTENT FROM ORDERS WHERE ID = ${id}".query[Order].option
       A.ask.flatMap { tx => query.transact(tx) }
