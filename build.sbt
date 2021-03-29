@@ -46,6 +46,13 @@ lazy val infrastructure = project.settings(
   addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1")
 )
 
+lazy val `product-service` = project.settings(
+  name := "product-service",
+  libraryDependencies ++= Seq(
+  ),
+  addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.11.3" cross CrossVersion.full),
+  addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1")
+).dependsOn(infrastructure)
 
 lazy val root = (project in file("."))
   .settings(

@@ -6,9 +6,9 @@ import cats.effect.Timer
 import com.zhpooer.ecommerce.order.order._
 import cats.implicits._
 import cats.mtl.{Ask, Raise, Tell}
+import com.zhpooer.ecommerce.infrastructure.{Calendar, UUIDFactory, event}
 
 import java.time.Instant
-import java.util.concurrent.TimeUnit
 
 case class Order(
   id: String,
@@ -34,18 +34,18 @@ case class Address(
 
 object Order {
 
-  def create[F[_]: Timer: OrderIdGenAlg: Monad: OrderEventDispatcher: Tell[*[_], Chain[OrderDomainEvent]]](
+  def create[F[_]: Timer: UUIDFactory: OrderIdGenAlg: Monad: Tell[*[_], Chain[OrderDomainEvent]]](
     items: List[OrderItem], address: Address): F[Order] = {
     val totalPrice = items.map(i => i.count * i.itemPrice).sum
     for {
       orderId <- OrderIdGen[F].gen
-      now <- Timer[F].clock.monotonic(TimeUnit.MILLISECONDS).map(Instant.ofEpochMilli)
+      now <- Calendar.now[F]
       o = Order(
         id = orderId, items = items,
         totalPrice = totalPrice, status = OrderStatus.Created,
         address = address, createdAt = now
       )
-      _ <- implicitly[OrderEventDispatcher[F]].tell(orderId, OrderCreated(
+      _ <- event.tell[F, OrderEvent](orderId, OrderCreated(
         o.totalPrice, o.address, o.items, o.createdAt
       ))
     } yield o
