@@ -7,7 +7,7 @@ import cats.{Applicative, Defer}
 import java.util.UUID
 
 trait UUIDFactory[F[_]] {
-  def create:F[UUID]
+  def create: F[UUID]
 }
 
 object UUIDFactory {

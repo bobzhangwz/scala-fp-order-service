@@ -25,7 +25,7 @@ object DomainEvent {
   }
 
   def domainEventEncoder[T: Encoder: ClassTag]: Encoder[DomainEvent[T]] = {
-    Encoder.forProduct5("globalIdentifier", "eventId", "createdAt", "type", "detail") { e =>
+    Encoder.forProduct5("globalIdentifier", "eventId", "createdAt", "category", "detail") { e =>
       val eventType = implicitly[ClassTag[T]].runtimeClass.getSimpleName
       (e.globalIdentifier, e.eventId, e.createdAt, eventType, e.detail)
     }

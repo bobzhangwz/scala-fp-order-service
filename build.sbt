@@ -19,6 +19,7 @@ ThisBuild / libraryDependencies := Seq(
   "org.typelevel"   %% "cats-tagless-macros" % "0.12",
   "io.circe"        %% "circe-parser"        % CirceVersion,
   "io.circe"        %% "circe-generic"       % CirceVersion,
+  "io.circe"        %% "circe-literal"       % CirceVersion,
   "org.tpolecat"    %% "doobie-core"         % DoobieVersion,
   "org.tpolecat"    %% "doobie-hikari"       % DoobieVersion,
   "org.tpolecat"    %% "doobie-quill"        % DoobieVersion,
