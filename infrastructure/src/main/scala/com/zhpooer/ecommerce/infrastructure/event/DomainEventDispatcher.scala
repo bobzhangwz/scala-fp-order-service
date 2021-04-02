@@ -27,7 +27,7 @@ object DomainEventDispatcher {
       events.traverse_(e => {
         val request = PublishRequest.builder()
           .message(e.asJson.noSpaces)
-          .messageDeduplicationId(e.globalIdentifier)
+          .messageDeduplicationId(e.eventId)
           .targetArn(eventPublishQueueArn)
           .build()
 
