@@ -20,8 +20,8 @@ package object order {
     def apply[F[_]: Timer: Sync: TransactionMrg](snsClient: SnsClient, orderEventPublisherArn: String): OrderAlg[F] = {
       implicit val orderRepositoryImpl = OrderRepository.impl[F]
       implicit val orderIdGenImpl = OrderIdGen.impl[F]
-      implicit val orderEventDispatcherImpl = DomainEventDispatcher.impl[F, OrderEvent](snsClient, orderEventPublisherArn)
       implicit val uuidFactory = UUIDFactory.impl[F]
+      implicit val orderEventDispatcherImpl = DomainEventDispatcher.impl[F, OrderEvent](snsClient, orderEventPublisherArn)
 
       new OrderAlg[F] {
         override val orderAppSvc: OrderAppService[F] = OrderAppService.impl[F]

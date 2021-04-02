@@ -12,17 +12,15 @@ import java.time.Instant
 import scala.reflect.ClassTag
 
 case class DomainEvent[T] private (
-  eventId: String, domainId: String,
-  detail: T, createdAt: Instant
+  eventId: String, detail: T, createdAt: Instant
 )
 
 object DomainEvent {
-  def apply[F[_]: UUIDFactory: Monad: Timer, T](
-    domainId: String, detail: T): F[DomainEvent[T]] = {
+  def apply[F[_]: UUIDFactory: Monad: Timer, T](detail: T): F[DomainEvent[T]] = {
     for {
       gid <- UUIDFactory[F].create
       now <- Calendar.now[F]
-    } yield DomainEvent(gid.toString, domainId, detail, now)
+    } yield DomainEvent(gid.toString, detail, now)
   }
 
   def domainEventEncoder[T: Encoder: ClassTag]: Encoder[DomainEvent[T]] = {

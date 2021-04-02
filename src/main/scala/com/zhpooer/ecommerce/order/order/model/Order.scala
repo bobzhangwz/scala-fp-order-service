@@ -6,7 +6,7 @@ import cats.effect.Timer
 import com.zhpooer.ecommerce.order.order._
 import cats.implicits._
 import cats.mtl.{Ask, Raise, Tell}
-import com.zhpooer.ecommerce.infrastructure.{Calendar, UUIDFactory, event}
+import com.zhpooer.ecommerce.infrastructure.Calendar
 
 import java.time.Instant
 
@@ -34,7 +34,7 @@ case class Address(
 
 object Order {
 
-  def create[F[_]: Timer: UUIDFactory: OrderIdGenAlg: Monad: Tell[*[_], Chain[OrderDomainEvent]]](
+  def create[F[_]: Timer: OrderIdGenAlg: Monad: Tell[*[_], Chain[OrderEvent]]](
     items: List[OrderItem], address: Address): F[Order] = {
     val totalPrice = items.map(i => i.count * i.itemPrice).sum
     for {
@@ -45,9 +45,9 @@ object Order {
         totalPrice = totalPrice, status = OrderStatus.Created,
         address = address, createdAt = now
       )
-      _ <- event.tell[F, OrderEvent](orderId, OrderCreated(
-        o.totalPrice, o.address, o.items, o.createdAt
-      ))
+      _ <- Tell.tellF[F](
+        Chain.one(OrderCreated(orderId, o.totalPrice, o.address, o.items, o.createdAt))
+      )
     } yield o
   }
 

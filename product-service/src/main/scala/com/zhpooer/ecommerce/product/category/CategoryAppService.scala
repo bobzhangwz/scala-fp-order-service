@@ -1,7 +1,7 @@
 package com.zhpooer.ecommerce.product.category
 
 import cats.Monad
-import cats.data.WriterT
+import cats.data.{Chain, WriterT}
 import cats.effect.Timer
 import cats.implicits._
 import cats.mtl.Raise
@@ -21,13 +21,13 @@ object CategoryAppService {
 
   def impl[F[_]: Timer: Monad: UUIDFactory: CategoryIdGen: CategoryEventDispatcher: TransactionMrg: CategoryRepo] = new CategoryAppService[F] {
 
-    val asWriterT = WriterT.liftK[F, CategoryDomainEvents]
-    implicit val uuidFacWriterT = tools.beWriterT[F, UUIDFactory, CategoryDomainEvents]
-    implicit val categoryIdGenWriterWriterT = tools.beWriterT[F, CategoryIdGen, CategoryDomainEvents]
+    val asWriterT = WriterT.liftK[F, Chain[CategoryEvent]]
+    implicit val uuidFacWriterT = tools.beWriterT[F, UUIDFactory, Chain[CategoryEvent]]
+    implicit val categoryIdGenWriterWriterT = tools.beWriterT[F, CategoryIdGen, Chain[CategoryEvent]]
 
     override def create(command: CreateCategoryCommand): F[Category] = TransactionMrg[F].startTX { implicit askTX =>
       val createCategory = for {
-        category <- Category.create[WriterT[F, CategoryDomainEvents, *]](command.name, command.description)
+        category <- Category.create[WriterT[F, Chain[CategoryEvent], *]](command.name, command.description)
         _ <- asWriterT { CategoryRepo[F].save(category) }
       } yield category
 

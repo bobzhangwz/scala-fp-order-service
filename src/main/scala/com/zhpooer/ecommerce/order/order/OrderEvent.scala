@@ -6,7 +6,9 @@ import java.time.Instant
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.semiauto._
 
-sealed trait OrderEvent
+sealed trait OrderEvent {
+  def orderId: String
+}
 
 object OrderEvent {
   implicit val orderEventEncoder: Encoder[OrderEvent] = {
@@ -21,19 +23,21 @@ object OrderEvent {
 }
 
 case class OrderAddressChanged(
+  override val orderId: String,
   oldAddress: String,
   newAddress: String
 ) extends OrderEvent
 
 case class OrderCreated(
+  override val orderId: String,
   totalPrice: BigDecimal,
   address: Address,
   items: List[OrderItem],
   createdAt: Instant
 ) extends OrderEvent
 
-case object OrderPaid extends OrderEvent
+case class OrderPaid(override val orderId: String) extends OrderEvent
 
 case class OrderProductChanged(
-  productId: String, originCount: Int, newCount: Int
+  override val orderId: String, productId: String, originCount: Int, newCount: Int
 ) extends OrderEvent

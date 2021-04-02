@@ -1,11 +1,12 @@
 package com.zhpooer.ecommerce.product.category
 
 import cats.Monad
+import cats.data.Chain
 import cats.effect.{Sync, Timer}
 import cats.implicits._
 import cats.mtl.Tell
 import cats.tagless.Derive
-import com.zhpooer.ecommerce.infrastructure.{Calendar, UUIDFactory, event}
+import com.zhpooer.ecommerce.infrastructure.Calendar
 
 import java.time.Instant
 import java.util.UUID
@@ -18,7 +19,7 @@ case class Category(
 )
 
 object Category {
-  def create[F[_]: Monad: Timer: CategoryIdGen: UUIDFactory: Tell[*[_], CategoryDomainEvents]](
+  def create[F[_]: Monad: Timer: CategoryIdGen: Tell[*[_], Chain[CategoryEvent]]](
     name: String, description: String
   ): F[Category] = for {
     categoryId <- CategoryIdGen[F].genId
@@ -26,8 +27,8 @@ object Category {
     c = Category(
       id = categoryId, name = name, description = description, createdAt = now
     )
-    _ <- event.tell[F, CategoryEvent](
-      categoryId, CategoryEvent.CategoryCreated(name, description)
+    _ <- Tell.tellF[F](
+      Chain(CategoryEvent.CategoryCreated(categoryId, name, description))
     )
   } yield c
 }

@@ -5,7 +5,6 @@ import cats.data.Chain
 import cats.effect.Timer
 import cats.implicits._
 import cats.mtl.{Ask, Raise, Tell}
-import com.zhpooer.ecommerce.infrastructure.UUIDFactory
 import com.zhpooer.ecommerce.infrastructure.db.TransactionMrg
 import com.zhpooer.ecommerce.order.order.OrderCommand.{ChangeProductCountCommand, CreateOrderCommand, PayOrderCommand}
 import com.zhpooer.ecommerce.order.order.OrderError.OrderNotFound
@@ -31,12 +30,12 @@ object OrderAppService {
   def apply[F[_]: OrderAppService]: OrderAppService[F] = implicitly
 
   def impl[
-    F[_]: Timer: Monad: OrderIdGenAlg : OrderEventDispatcher: UUIDFactory: TransactionMrg: OrderRepositoryAlg
+    F[_]: Timer: Monad: OrderIdGenAlg : OrderEventDispatcher: TransactionMrg: OrderRepositoryAlg
   ]: OrderAppService[F] = new OrderAppService[F] {
 
-    implicit val tellInstance: Tell[F, Chain[OrderDomainEvent]] = new Tell[F, Chain[OrderDomainEvent]] {
+    implicit val tellInstance: Tell[F, Chain[OrderEvent]] = new Tell[F, Chain[OrderEvent]] {
       override def functor: Functor[F] = implicitly
-      override def tell(l: Chain[OrderDomainEvent]): F[Unit] = implicitly[OrderEventDispatcher[F]].dispatch(l)
+      override def tell(l: Chain[OrderEvent]): F[Unit] = implicitly[OrderEventDispatcher[F]].dispatch(l)
     }
 
     override def createOrder(createOrderCommand: CreateOrderCommand): F[Order] =
