@@ -10,6 +10,6 @@ object ProductEvent {
     productId: String, name: String,
     description: String, price: BigDecimal,
     createdAt: Instant
-  )
+  ) extends ProductEvent
 }
 
