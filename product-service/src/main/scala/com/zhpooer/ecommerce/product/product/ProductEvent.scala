@@ -6,6 +6,7 @@ sealed trait ProductEvent
 
 object ProductEvent {
   case class ProductNameUpdatedEvent(productId: String, oldName: String, newName: String) extends ProductEvent
+
   case class ProductCreatedEvent(
     productId: String, name: String,
     description: String, price: BigDecimal,

@@ -13,7 +13,7 @@ import scala.reflect.runtime.universe.TypeTag
 
 trait Repository[F[_], E] {
   def getById(id: String)(implicit A: Ask[F, Transactor[F]]): F[Option[E]]
-  def save(category: E)(implicit A: Ask[F, Transactor[F]]): F[Unit]
+  def save(e: E)(implicit A: Ask[F, Transactor[F]]): F[Unit]
 }
 
 object Repository {

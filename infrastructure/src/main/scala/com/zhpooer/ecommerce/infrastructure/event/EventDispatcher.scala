@@ -1,7 +1,7 @@
 package com.zhpooer.ecommerce.infrastructure.event
 
 
-import cats.data.Chain
+import cats.data.{Chain, WriterT}
 import cats.effect.{Sync, Timer}
 import cats.implicits._
 import com.zhpooer.ecommerce.infrastructure.UUIDFactory
@@ -12,17 +12,18 @@ import io.circe.Encoder
 
 import scala.reflect.ClassTag
 
-trait DomainEventDispatcher[F[_], A] {
+trait EventDispatcher[F[_], A] {
   def dispatch(events: Chain[A]): F[Unit]
+  def dispatchAndExtract[B](eventsWriter: WriterT[F, Chain[A], B]): F[B]
 }
 
-object DomainEventDispatcher {
+object EventDispatcher {
 
   class PartialDomainEventDispatcher[F[_]] {
-    def apply[A](implicit d: DomainEventDispatcher[F, A]): DomainEventDispatcher[F, A] = d
+    def apply[A](implicit d: EventDispatcher[F, A]): EventDispatcher[F, A] = d
   }
 
-  def impl[F[_]: UUIDFactory: Sync: Timer, A: Encoder: ClassTag](snsClient: SnsClient, eventPublishQueueArn: String): DomainEventDispatcher[F, A] = new DomainEventDispatcher[F, A] {
+  def impl[F[_]: UUIDFactory: Sync: Timer, A: Encoder: ClassTag](snsClient: SnsClient, eventPublishQueueArn: String): EventDispatcher[F, A] = new EventDispatcher[F, A] {
     implicit val domainEventEncoder = DomainEvent.domainEventEncoder[A]
     def dispatch(events: Chain[A]): F[Unit] = {
 
@@ -37,6 +38,13 @@ object DomainEventDispatcher {
           _ <- Sync[F].delay{snsClient.publish(request)}
         } yield ()
       })
+    }
+
+    def dispatchAndExtract[B](eventsWriter: WriterT[F, Chain[A], B]): F[B] = {
+      for {
+        (events, b) <- eventsWriter.run
+        _ <- dispatch(events)
+      } yield b
     }
   }
 }

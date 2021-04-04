@@ -1,7 +1,6 @@
 package com.zhpooer.ecommerce.infrastructure
 
 import cats.syntax.all._
-import cats.tagless.{Derive, FunctorK}
 import cats.{Applicative, Defer}
 
 import java.util.UUID
@@ -11,8 +10,6 @@ trait UUIDFactory[F[_]] {
 }
 
 object UUIDFactory {
-
-  implicit def functorKForUUIDFactory: FunctorK[UUIDFactory] = Derive.functorK
 
   def apply[F[_]: UUIDFactory]: UUIDFactory[F] = implicitly
 

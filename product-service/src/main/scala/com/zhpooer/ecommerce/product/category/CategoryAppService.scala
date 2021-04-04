@@ -6,7 +6,7 @@ import cats.effect.Timer
 import cats.implicits._
 import cats.mtl.Raise
 import com.zhpooer.ecommerce.infrastructure.db.TransactionMrg
-import com.zhpooer.ecommerce.infrastructure.{Repository, UUIDFactory, tools}
+import com.zhpooer.ecommerce.infrastructure.{Repository, tools}
 import com.zhpooer.ecommerce.product.category.CategoryCommand.CreateCategoryCommand
 import com.zhpooer.ecommerce.product.category.CategoryError.CategoryNotFound
 import com.zhpooer.ecommerce.product.category.repr.CategoryRepr
@@ -20,7 +20,7 @@ trait CategoryAppService[F[_]] {
 object CategoryAppService {
 
   def impl[
-    F[_]: Timer: Monad: UUIDFactory: CategoryIdGen: CategoryEventDispatcher: TransactionMrg: Repository[*[_], Category]
+    F[_]: Timer: Monad: CategoryIdGen: CategoryEventDispatcher: TransactionMrg: Repository[*[_], Category]
   ]: CategoryAppService[F] = new CategoryAppService[F] {
     val asWriterT = WriterT.liftK[F, Chain[CategoryEvent]]
     implicit val categoryIdGenWriterWriterT = tools.beWriterT[F, CategoryIdGen, Chain[CategoryEvent]]
