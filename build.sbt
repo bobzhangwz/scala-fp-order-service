@@ -50,6 +50,9 @@ lazy val infrastructure = project.settings(
 lazy val `product-service` = project.settings(
   name := "product-service",
   libraryDependencies ++= Seq(
+    "com.softwaremill.sttp.tapir" %% "tapir-core" % "0.17.19",
+    "com.softwaremill.sttp.tapir" %% "tapir-http4s-server" % "0.17.19",
+    "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % "0.17.19"
   ),
   addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.11.3" cross CrossVersion.full),
   addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1")

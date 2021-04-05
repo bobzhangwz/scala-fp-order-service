@@ -20,7 +20,7 @@ object ProductAppService {
     override def create(
       c: ProductCommand.ProductCreateCommand
     ): F[Product] = TransactionMrg[F].startTX { implicit askTX =>
-      val createProduct = for {
+      val createProduct: WriterT[F, Chain[ProductEvent], Product] = for {
         product <- Product.create[WriterT[F, Chain[ProductEvent], *]](
           c.name, c.description, c.price, c.categoryId
         )
