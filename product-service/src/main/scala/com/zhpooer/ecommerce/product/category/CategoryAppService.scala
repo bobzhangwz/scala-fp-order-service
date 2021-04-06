@@ -6,7 +6,7 @@ import cats.effect.Timer
 import cats.implicits._
 import cats.mtl.Raise
 import com.zhpooer.ecommerce.infrastructure.db.TransactionMrg
-import com.zhpooer.ecommerce.infrastructure.{Repository, tools}
+import com.zhpooer.ecommerce.infrastructure.Repository
 import com.zhpooer.ecommerce.product.category.CategoryCommand.CreateCategoryCommand
 import com.zhpooer.ecommerce.product.category.CategoryError.CategoryNotFound
 import com.zhpooer.ecommerce.product.category.repr.CategoryRepr
@@ -20,20 +20,18 @@ trait CategoryAppService[F[_]] {
 object CategoryAppService {
 
   def impl[
-    F[_]: Timer: Monad: CategoryIdGen: CategoryEventDispatcher: TransactionMrg: Repository[*[_], Category]
+    F[_]: Timer: Monad: DomainIdGen: DomainEventDispatcher: TransactionMrg: DomainRepo
   ]: CategoryAppService[F] = new CategoryAppService[F] {
-    val asWriterT = WriterT.liftK[F, Chain[CategoryEvent]]
-    implicit val categoryIdGenWriterWriterT = tools.beWriterT[F, CategoryIdGen, Chain[CategoryEvent]]
 
     override def create(command: CreateCategoryCommand): F[Category] = TransactionMrg[F].startTX { implicit askTX =>
       val createCategory = for {
         category <- Category.create[WriterT[F, Chain[CategoryEvent], *]](command.name, command.description)
-        _ <- asWriterT { Repository[F, Category].save(category) }
+        _ <- Repository[F, Category].save(category).asEventsWriter
       } yield category
 
       for {
         (events, category) <- createCategory.run
-        _ <- implicitly[CategoryEventDispatcher[F]].dispatch(events)
+        _ <- implicitly[DomainEventDispatcher[F]].dispatch(events)
       } yield category
     }
 

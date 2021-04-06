@@ -11,11 +11,11 @@ trait DomainPrelude[DomainType, IdType, EventType] {
   type DomainEventDispatcher[F[_]] = EventDispatcher[F, EventType]
 
   type EventWriterT[F[_], A] = WriterT[F, Chain[EventType], A]
-  def liftToEventWriterT[F[_]: Applicative]: FunctionK[F, WriterT[F, Chain[EventType], *]] =
-    WriterT.liftK[F, Chain[EventType]]
 
   implicit class EventWriterTWrapper[F[_]: Applicative, A](f: F[A]) {
-    def asEventsWriter: WriterT[F, Chain[EventType], A] = liftToEventWriterT[F].apply(f)
+    def asEventsWriter: WriterT[F, Chain[EventType], A] = {
+      WriterT.liftF[F, Chain[EventType], A](f)
+    }
   }
 
 }
