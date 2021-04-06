@@ -33,7 +33,7 @@ class ProductRoute[F[_]: Concurrent: Timer: ContextShift](productAppService: Pro
         )
       )
 
-  def all: HttpRoutes[F] = {
+  val all: HttpRoutes[F] = {
     val route1 = Http4sServerInterpreter.toRoutes(createProductEndpoint){ command =>
       productAppService.create(command).map(p => ProductId(p.id)).value
     }
@@ -41,6 +41,7 @@ class ProductRoute[F[_]: Concurrent: Timer: ContextShift](productAppService: Pro
       case (productId, command) =>
         productAppService.updateProductName(productId, command).value
     }
+
     route1 <+> route2
   }
 
