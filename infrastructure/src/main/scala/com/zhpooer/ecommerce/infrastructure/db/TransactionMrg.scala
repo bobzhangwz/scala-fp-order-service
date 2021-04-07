@@ -36,7 +36,9 @@ object TransactionMrg {
 
     }
 
-    override def readOnly[A](block: Ask[F, Transactor[F]] => F[A]): F[A] = block.apply(Ask.const(transactor))
+    override def readOnly[A](block: Ask[F, Transactor[F]] => F[A]): F[A] = block.apply(
+      Ask.const(transactor.copy(strategy0 = Strategy.default))
+    )
   }
 
 }
