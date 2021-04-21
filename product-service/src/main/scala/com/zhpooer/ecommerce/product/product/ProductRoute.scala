@@ -13,7 +13,9 @@ import sttp.tapir.json.circe._
 import sttp.tapir.server.http4s.Http4sServerInterpreter
 
 class ProductRoute[F[_]: Concurrent: Timer: ContextShift](productAppService: ProductAppService[EitherT[F, ProductError, *]]) {
+
   case class ProductId(productId: String)
+
   val createProductEndpoint: Endpoint[ProductCreateCommand, ProductError, ProductId, Any] =
     endpoint.post.in("products")
       .in(jsonBody[ProductCreateCommand])
@@ -44,6 +46,5 @@ class ProductRoute[F[_]: Concurrent: Timer: ContextShift](productAppService: Pro
 
     route1 <+> route2
   }
-
 
 }

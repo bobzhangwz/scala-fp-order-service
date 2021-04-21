@@ -19,14 +19,14 @@ case class AppEnv(
 
 case class ApiConfig(endpoint: String, port: Int)
 
-class ConfigLoader(envMap: Map[String, String]) extends ConfigIncubator {
-
-  override def source: Map[String, String] = envMap
+class ConfigLoader(envMap: Map[String, String]) {
+  val incubator = new ConfigIncubator(envMap)
+  import incubator._
 
   def load[F[_]: Async: ContextShift]: F[AppEnv] = {
     val appConfig = for {
-      orderEventPubArn <- fromSource("ORDER_EVENT_PUB_ARN")
-      orderEventListenerUrl <- fromSource("ORDER_EVENT_LISTENER_URL")
+      orderEventPubArn <- fromEnv("ORDER_EVENT_PUB_ARN")
+      orderEventListenerUrl <- fromEnv("ORDER_EVENT_LISTENER_URL")
       snsClient <- buildAWSClient(SnsClient.builder())
       sqsClient <- buildAWSClient(SqsClient.builder())
       _dbConfig <- dbConfig
@@ -43,17 +43,17 @@ class ConfigLoader(envMap: Map[String, String]) extends ConfigIncubator {
 
   def dbConfig: ConfigValue[DBConfig] = {
     for {
-      url      <- fromSource("DB_URL")
-      driver   <- fromSource("DB_DRIVER")
-      user     <- fromSource("DB_USER")
-      password <- fromSource("DB_PASSWORD").secret
+      url      <- fromEnv("DB_URL")
+      driver   <- fromEnv("DB_DRIVER")
+      user     <- fromEnv("DB_USER")
+      password <- fromEnv("DB_PASSWORD").secret
     } yield DBConfig(url, driver, user, password)
   }
 
   def apiConfig: ConfigValue[ApiConfig] =
     for {
-      port     <- fromSource("API_PORT").as[Int].default(8081)
-      endpoint <- fromSource("API_ENDPOINT").default("0.0.0.0")
+      port     <- fromEnv("API_PORT").as[Int].default(8081)
+      endpoint <- fromEnv("API_ENDPOINT").default("0.0.0.0")
     } yield ApiConfig(endpoint, port)
 
 }

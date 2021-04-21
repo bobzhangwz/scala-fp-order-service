@@ -1,7 +1,6 @@
 package com.zhpooer.ecommerce.infrastructure
 
 import cats.Applicative
-import cats.arrow.FunctionK
 import cats.data.{Chain, WriterT}
 import com.zhpooer.ecommerce.infrastructure.event.EventDispatcher
 

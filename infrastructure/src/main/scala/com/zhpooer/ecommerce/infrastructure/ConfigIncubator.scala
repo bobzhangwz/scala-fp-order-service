@@ -6,12 +6,10 @@ import software.amazon.awssdk.core.client.builder.SdkClientBuilder
 
 import java.net.URI
 
-trait ConfigIncubator {
-  def source: Map[String, String]
-
-  def fromSource(name: String): ConfigValue[String] = {
+class ConfigIncubator(envMap: Map[String, String]) {
+  def fromEnv(name: String): ConfigValue[String] = {
     val key = ConfigKey.env(name)
-    source.get(name).fold(ConfigValue.missing[String](key))(ConfigValue.loaded[String](key, _))
+    envMap.get(name).fold(ConfigValue.missing[String](key))(ConfigValue.loaded[String](key, _))
   }
 
   def buildAWSClient[A <: SdkClientBuilder[A, B], B](
@@ -19,7 +17,7 @@ trait ConfigIncubator {
     awsOverrideEndpointKey: String = "AWS_OVERRIDE_ENDPOINT"
   ): ConfigValue[B] = {
     val awsOverrideEndpoint: ConfigValue[Option[URI]] =
-      fromSource(awsOverrideEndpointKey)
+      fromEnv(awsOverrideEndpointKey)
         .evalMap(s => IO.delay(URI.create(s)))
         .option
     awsOverrideEndpoint
